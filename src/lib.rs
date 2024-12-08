@@ -5,7 +5,6 @@ use std::{
 };
 
 use anyhow::{anyhow, bail, Result};
-use flate2::{write::GzEncoder, Compression};
 use sha2::{Digest, Sha256 as Sha256Hasher};
 use tracing::info;
 
@@ -33,7 +32,7 @@ pub fn create_tarball<P: AsRef<Path>>(package_path: P, package: &Package) -> Res
     let tarball_name = format!("{}-{}.peach", package.info.name, package.info.version);
     let tarball_path = current_dir()?.join(&tarball_name);
     let tar_gz = File::create(&tarball_path)?;
-    let enc = GzEncoder::new(tar_gz, Compression::default());
+    let enc = zstd::Encoder::new(tar_gz, 22)?;
     let mut tar = tar::Builder::new(enc);
 
     tar.append_dir_all(".", package_path)?;

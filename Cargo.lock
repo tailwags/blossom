@@ -231,6 +231,7 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "xz2",
+ "zstd",
 ]
 
 [[package]]

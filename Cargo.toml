@@ -30,3 +30,4 @@ tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 url = { version = "2.5.4", features = ["serde"] }
 xz2 = "0.1.7"
+zstd = "0.13.2"
