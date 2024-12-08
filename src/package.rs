@@ -147,3 +147,50 @@ fn replace_vars<'h>(haystack: &'h str, variables: &HashMap<&str, &str>) -> Strin
         })
         .into_owned()
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::*;
+
+    #[test]
+    fn test_basic_replacement() {
+        let mut variables = HashMap::new();
+        variables.insert("name", "Mati");
+        variables.insert("greeting", "Hello");
+
+        let haystack = "%{greeting}, %{name}!";
+        assert_eq!(replace_vars(haystack, &variables), "Hello, Mati!");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_missing_variable() {
+        let variables = HashMap::new();
+        let haystack = "Hi %{name}!";
+
+        replace_vars(haystack, &variables);
+    }
+
+    #[test]
+    fn test_multiple_occurrences() {
+        let mut variables = HashMap::new();
+        variables.insert("word", "rust");
+
+        let haystack = "I love %{word}! %{word} is great!";
+        assert_eq!(
+            replace_vars(haystack, &variables),
+            "I love rust! rust is great!"
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_multiple_missing_variables() {
+        let variables = HashMap::new();
+        let haystack = "Hi %{name}, welcome to %{city}!";
+
+        replace_vars(haystack, &variables);
+    }
+}
