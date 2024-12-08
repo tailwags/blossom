@@ -16,7 +16,7 @@ use tracing::info;
 use xz2::read::XzDecoder;
 
 use crate::{
-    check_hash,
+    check_hash, create_tarball,
     package::{Info, Package, Source, StepVariant},
 };
 
@@ -29,7 +29,7 @@ pub async fn build() -> Result<()> {
 
     let package = Package::parse(&fs::read_to_string(package_path)?)?;
 
-    let info = package.info;
+    let info = &package.info;
     info!(
         "Building package \"{}\" version {}",
         &info.name, &info.version
@@ -45,17 +45,17 @@ pub async fn build() -> Result<()> {
         fs::remove_dir_all("sources")?;
     }
 
-    for source in package.sources {
-        let file_path = fetch_and_verify_source(&client, &source, &info).await?;
+    for source in &package.sources {
+        let file_path = fetch_and_verify_source(&client, source, &info).await?;
         extract_source(&file_path)?;
     }
 
     let mut working_dir = current_dir()?;
 
-    for step in package.steps {
+    for step in &package.steps {
         info!("Running step: {}", step.name);
 
-        match step.variant {
+        match &step.variant {
             StepVariant::Command { command, runner } => {
                 let result = runner
                     .into_command()
@@ -75,7 +75,7 @@ pub async fn build() -> Result<()> {
         }
     }
 
-    // create_tarball(path, &package)?;
+    create_tarball(current_dir()?.join("package"), &package)?;
 
     info!("Package '{}' built successfully!", info.name);
     Ok(())

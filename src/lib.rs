@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    env::current_dir,
     fs::{self, File},
     path::Path,
     sync::LazyLock,
@@ -34,15 +35,15 @@ pub fn check_hash<P: AsRef<Path>>(path: P, hash: &str) -> Result<bool> {
     Ok(hash == computed_hash)
 }
 
-fn _create_tarball<P: AsRef<Path>>(package_path: P, package: &Package) -> Result<()> {
-    let tarball_name = format!("{}_{}.peach", package.info.name, package.info.version);
-    let tarball_path = package_path.as_ref().join(&tarball_name);
+pub fn create_tarball<P: AsRef<Path>>(package_path: P, package: &Package) -> Result<()> {
+    let tarball_name = format!("{}-{}.peach", package.info.name, package.info.version);
+    let tarball_path = current_dir()?.join(&tarball_name);
     let tar_gz = File::create(&tarball_path)?;
     let enc = GzEncoder::new(tar_gz, Compression::default());
     let mut tar = tar::Builder::new(enc);
 
     tar.append_dir_all(".", package_path)?;
 
-    info!("Created tarball: {}", tarball_name);
+    info!("Created package: {}", tarball_name);
     Ok(())
 }
