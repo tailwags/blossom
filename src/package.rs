@@ -1,4 +1,7 @@
-use std::{collections::HashMap, fmt::Display, process::Command, str::FromStr, sync::LazyLock};
+use std::{
+    collections::HashMap, env::current_dir, fmt::Display, process::Command, str::FromStr,
+    sync::LazyLock,
+};
 
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
@@ -113,7 +116,10 @@ impl Package {
         let mut package: Package = toml_edit::de::from_str(s)?;
 
         let mut variables = HashMap::new();
+
+        let pkgdir = current_dir()?.join("package");
         variables.insert("version", package.info.version.as_str());
+        variables.insert("pkgdir", pkgdir.to_str().unwrap()); // FIXME: horrible
 
         for source in package.sources.iter_mut() {
             source.url = replace_vars(&source.url, &variables)
@@ -121,7 +127,9 @@ impl Package {
 
         for step in package.steps.iter_mut() {
             match &mut step.variant {
-                StepVariant::Command { .. } => {}
+                StepVariant::Command { command, .. } => {
+                    *command = replace_vars(command.as_str(), &variables).into();
+                }
                 StepVariant::Move { path } => {
                     *path = replace_vars(path.as_str(), &variables).into();
                 }
