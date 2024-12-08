@@ -17,7 +17,7 @@ use xz2::read::XzDecoder;
 
 use crate::{
     check_hash, create_tarball,
-    package::{Info, Package, Source, StepVariant},
+    package::{Package, Source, StepVariant},
 };
 
 pub async fn build() -> Result<()> {
@@ -46,7 +46,7 @@ pub async fn build() -> Result<()> {
     }
 
     for source in &package.sources {
-        let file_path = fetch_and_verify_source(&client, source, &info).await?;
+        let file_path = fetch_and_verify_source(&client, source).await?;
         extract_source(&file_path)?;
     }
 
@@ -68,7 +68,7 @@ pub async fn build() -> Result<()> {
                 }
             }
             StepVariant::Move { path } => {
-                fs::create_dir_all(&path)?;
+                fs::create_dir_all(path)?;
 
                 working_dir = path.into();
             }
@@ -81,7 +81,7 @@ pub async fn build() -> Result<()> {
     Ok(())
 }
 
-async fn fetch_and_verify_source(client: &Client, source: &Source, info: &Info) -> Result<PathBuf> {
+async fn fetch_and_verify_source(client: &Client, source: &Source) -> Result<PathBuf> {
     let url: Url = source.url.as_str().try_into()?;
 
     let target_path = PathBuf::from(url.path_segments().unwrap().last().unwrap());

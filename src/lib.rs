@@ -1,24 +1,18 @@
 use std::{
-    borrow::Cow,
     env::current_dir,
     fs::{self, File},
     path::Path,
-    sync::LazyLock,
 };
 
 use anyhow::{anyhow, bail, Result};
 use flate2::{write::GzEncoder, Compression};
-use regex::Regex;
 use sha2::{Digest, Sha256 as Sha256Hasher};
 use tracing::info;
 
 pub mod commands;
 pub mod package;
 
-use package::{Info, Package};
-
-static VARIABLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"%\{([a-zA-Z0-9_]*)\}").expect("invalid regex"));
+use package::Package;
 
 pub fn check_hash<P: AsRef<Path>>(path: P, hash: &str) -> Result<bool> {
     let file = fs::read(path)?;

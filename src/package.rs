@@ -128,7 +128,7 @@ impl Package {
         for step in package.steps.iter_mut() {
             match &mut step.variant {
                 StepVariant::Command { command, .. } => {
-                    *command = replace_vars(command.as_str(), &variables).into();
+                    *command = replace_vars(command.as_str(), &variables);
                 }
                 StepVariant::Move { path } => {
                     *path = replace_vars(path.as_str(), &variables).into();
@@ -140,7 +140,7 @@ impl Package {
     }
 }
 
-fn replace_vars<'h>(haystack: &'h str, variables: &HashMap<&str, &str>) -> String {
+fn replace_vars(haystack: &str, variables: &HashMap<&str, &str>) -> String {
     VARIABLE_REGEX
         .replace_all(haystack, |caps: &Captures| {
             variables.get(&caps[1]).expect("Unknown variable") // FIXME: error handling
