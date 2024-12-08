@@ -1,0 +1,11 @@
+[unstable]
+build-std = ["std"]
+
+[build]
+rustflags = [
+    "-Clinker-plugin-lto",
+    "-Clinker=clang",
+    "-Clink-arg=-fuse-ld=lld",
+    "-Zlinker-features=+lld",
+    "-Zlocation-detail=none",
+]
