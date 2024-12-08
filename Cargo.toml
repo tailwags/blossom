@@ -24,7 +24,7 @@ clap = { version = "4.5.23", features = [
 flate2 = "1.0.35"
 indicatif = "0.17.9"
 regex = "1.11.1"
-reqwest = { version = "0.12.9", features = ["gzip", "brotli", "zstd"] }
+reqwest = { version = "0.12.9", features = ["deflate", "gzip", "zstd"] }
 serde = { version = "1.0.215", features = ["derive"] }
 serde_with = "3.11.0"
 sha2 = "0.10.8"
