@@ -18,7 +18,6 @@ use xz2::read::XzDecoder;
 use crate::{
     check_hash,
     package::{Info, Package, Source, StepVariant},
-    replace_vars,
 };
 
 pub async fn build() -> Result<()> {
@@ -28,9 +27,7 @@ pub async fn build() -> Result<()> {
         bail!("package.toml not found in the specified path.");
     }
 
-    let package: Package = toml_edit::de::from_str(&fs::read_to_string(package_path)?)?;
-
-    // dbg!(&package);
+    let package = Package::parse(&fs::read_to_string(package_path)?)?;
 
     let info = package.info;
     info!(
@@ -73,7 +70,7 @@ pub async fn build() -> Result<()> {
             StepVariant::Move { path } => {
                 fs::create_dir_all(&path)?;
 
-                working_dir = path
+                working_dir = path.into();
             }
         }
     }
@@ -85,7 +82,7 @@ pub async fn build() -> Result<()> {
 }
 
 async fn fetch_and_verify_source(client: &Client, source: &Source, info: &Info) -> Result<PathBuf> {
-    let url: Url = replace_vars(&source.url, info)?.as_ref().try_into()?;
+    let url: Url = source.url.as_str().try_into()?;
 
     let target_path = PathBuf::from(url.path_segments().unwrap().last().unwrap());
 

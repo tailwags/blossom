@@ -34,19 +34,6 @@ pub fn check_hash<P: AsRef<Path>>(path: P, hash: &str) -> Result<bool> {
     Ok(hash == computed_hash)
 }
 
-pub fn replace_vars<'a>(haystack: &'a str, info: &Info) -> Result<Cow<'a, str>> {
-    let res = if let Some(captures) = VARIABLE_REGEX.captures(haystack) {
-        match &captures[1] {
-            "version" => VARIABLE_REGEX.replace_all(haystack, &info.version),
-            _ => bail!("Wrong matcher"),
-        }
-    } else {
-        Cow::Borrowed(haystack)
-    };
-
-    Ok(res)
-}
-
 fn _create_tarball<P: AsRef<Path>>(package_path: P, package: &Package) -> Result<()> {
     let tarball_name = format!("{}_{}.peach", package.info.name, package.info.version);
     let tarball_path = package_path.as_ref().join(&tarball_name);

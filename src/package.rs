@@ -1,6 +1,8 @@
-use std::{collections::HashMap, fmt::Display, path::PathBuf, process::Command, str::FromStr};
+use std::{collections::HashMap, fmt::Display, process::Command, str::FromStr, sync::LazyLock};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
+use camino::Utf8PathBuf;
+use regex::{Captures, Regex};
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 use spdx::Expression;
@@ -60,7 +62,7 @@ pub enum StepVariant {
         command: String,
     },
     Move {
-        path: PathBuf,
+        path: Utf8PathBuf,
     },
 }
 
@@ -101,4 +103,39 @@ impl Runner {
             }
         }
     }
+}
+
+static VARIABLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"%\{([^}]+)\}").expect("invalid regex"));
+
+impl Package {
+    pub fn parse(s: &str) -> Result<Self> {
+        let mut package: Package = toml_edit::de::from_str(s)?;
+
+        let mut variables = HashMap::new();
+        variables.insert("version", package.info.version.as_str());
+
+        for source in package.sources.iter_mut() {
+            source.url = replace_vars(&source.url, &variables)
+        }
+
+        for step in package.steps.iter_mut() {
+            match &mut step.variant {
+                StepVariant::Command { .. } => {}
+                StepVariant::Move { path } => {
+                    *path = replace_vars(path.as_str(), &variables).into();
+                }
+            }
+        }
+
+        Ok(package)
+    }
+}
+
+fn replace_vars<'h>(haystack: &'h str, variables: &HashMap<&str, &str>) -> String {
+    VARIABLE_REGEX
+        .replace_all(haystack, |caps: &Captures| {
+            variables.get(&caps[1]).expect("Unknown variable") // FIXME: error handling
+        })
+        .into_owned()
 }
