@@ -14,7 +14,13 @@ base16ct = { version = "0.2.0", features = ["std"] }
 blake3 = "1.5.5"
 bzip2 = "0.4.4"
 camino = { version = "1.1.9", features = ["serde1"] }
-clap = { version = "4.5.23", features = ["derive"] }
+clap = { version = "4.5.23", features = [
+    "cargo",
+    "derive",
+    "env",
+    "unicode",
+    "wrap_help",
+] }
 flate2 = "1.0.35"
 indicatif = "0.17.9"
 regex = "1.11.1"
