@@ -5,20 +5,18 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use bzip2::read::BzDecoder;
 use camino::Utf8Path;
 use flate2::read::GzDecoder;
 use indicatif::ProgressBar;
 use reqwest::{Client, Url};
+use sha2::{Digest, Sha256 as Sha256Hasher};
 use tar::Archive;
 use tracing::info;
 use xz2::read::XzDecoder;
 
-use crate::{
-    check_hash, create_tarball,
-    package::{Package, Source, StepVariant},
-};
+use crate::package::{Package, Source, StepVariant};
 
 pub async fn build() -> Result<()> {
     let package_path = current_dir()?.join("package.toml");
@@ -163,5 +161,33 @@ fn unpack_archive<R: Read>(decoder: R) -> Result<()> {
 
     archive.unpack("sources/")?;
 
+    Ok(())
+}
+
+pub fn check_hash<P: AsRef<Path>>(path: P, hash: &str) -> Result<bool> {
+    let file = fs::read(path)?;
+    let (hash_type, hash) = hash
+        .split_once(':')
+        .ok_or(anyhow!("Invalid checksum format"))?;
+
+    let computed_hash = match hash_type {
+        "blake3" => blake3::hash(&file).to_hex().to_string(),
+        "sha256" => base16ct::lower::encode_string(Sha256Hasher::digest(&file).as_slice()),
+        _ => bail!("Unsupported hash"),
+    };
+
+    Ok(hash == computed_hash)
+}
+
+pub fn create_tarball<P: AsRef<Path>>(package_path: P, package: &Package) -> Result<()> {
+    let tarball_name = format!("{}-{}.peach", package.info.name, package.info.version);
+    let tarball_path = current_dir()?.join(&tarball_name);
+    let tar_gz = File::create(&tarball_path)?;
+    let enc = zstd::Encoder::new(tar_gz, 22)?;
+    let mut tar = tar::Builder::new(enc);
+
+    tar.append_dir_all(".", package_path)?;
+
+    info!("Created package: {}", tarball_name);
     Ok(())
 }
