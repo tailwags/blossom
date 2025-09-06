@@ -3,11 +3,11 @@ use std::{
     sync::LazyLock,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use camino::Utf8PathBuf;
 use regex::{Captures, Regex};
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, DisplayFromStr};
+use serde_with::{DisplayFromStr, serde_as};
 use spdx::Expression;
 
 #[derive(Debug, Serialize, Deserialize)]

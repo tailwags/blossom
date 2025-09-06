@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use bzip2::read::BzDecoder;
 use camino::Utf8Path;
 use flate2::read::GzDecoder;
